@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import { error } from 'node:console';
 import jwt from 'jsonwebtoken'
 
+
 const prisma = new PrismaClient()
 
 
@@ -83,10 +84,10 @@ export const login = async (req:Request, res:Response) =>{
             res.status(400).json({error:"Credenciales inválidas"})
             return
         }else{
-            
+                
             const token = jwt.sign(
             { userId: usuarioBuscado.id }, 
-            'PALABRA_SECRETA_SUPER_DIFICIL', 
+            process.env.JWT_SECRET || 'PALABRA_SECRETA_SUPER_DIFICIL', 
             { expiresIn: '1h' }
         );
 
