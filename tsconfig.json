@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    /* Configuración de Archivos */
+    "rootDir": "./src",
+    "outDir": "./dist",
+
+    /* Configuración del Módulo (Esto arregla tus imports) */
+    "module": "commonjs",
+    "target": "es2016",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+
+    /* Chequeos y Tipos */
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* Otros */
+    "sourceMap": true,
+    
+    /* IMPORTANTE: Desactivamos configuraciones que causan conflictos */
+    "verbatimModuleSyntax": false
+  },
+  "include": ["src/**/*"]
+}
