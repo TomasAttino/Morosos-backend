@@ -88,7 +88,7 @@ export const login = async (req:Request, res:Response) =>{
             const token = jwt.sign(
             { userId: usuarioBuscado.id }, 
             process.env.JWT_SECRET || 'PALABRA_SECRETA_SUPER_DIFICIL', 
-            { expiresIn: '1h' }
+            { expiresIn: '1d' }
         );
 
         res.json({
