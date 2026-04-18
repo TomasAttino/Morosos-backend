@@ -100,7 +100,8 @@ export const actualizarMonto= async(req: Request, res: Response)=>{
             return;
         }
 
-        const saldoAnterior=  Number(clienteActual.saldo);
+        const saldoAnterior = Number(clienteActual.saldo);
+        const nuevoSaldo = saldoAnterior + montoNumero;
 
         let tipoDeMovimiento = ("");
         let categoriaDeMovimiento = ("");
@@ -118,9 +119,7 @@ export const actualizarMonto= async(req: Request, res: Response)=>{
         }else { 
              tipoDeMovimiento = "PAGO"
 
-             const saldoFinal = saldoAnterior+ montoNumero
-        
-             if(saldoFinal === 0 ){
+             if(nuevoSaldo === 0 ){
                 categoriaDeMovimiento  ="PAGA TOTAL DEUDA"
              }else{
                 categoriaDeMovimiento  ="PAGA DEUDA"
@@ -153,7 +152,27 @@ export const actualizarMonto= async(req: Request, res: Response)=>{
         })
         ])
 
-        res.json(resultadoTransaccion[1])
+        const clienteActualizado = resultadoTransaccion[1];
+        
+        // Generar mensaje de WhatsApp
+        let mensajeWA = "";
+        if (nuevoSaldo > 0) {
+            mensajeWA = `Saldo anterior: $${saldoAnterior}. Nuevo Saldo: $${nuevoSaldo}`;
+        } else if (nuevoSaldo === 0) {
+            mensajeWA = `Pago el total de la deuda que era $${saldoAnterior}`;
+        }
+
+        let waUrl = "";
+        if (clienteActual.telefono) {
+            const telefonoLimpio = clienteActual.telefono.replace(/\D/g, "");
+            waUrl = `https://wa.me/${telefonoLimpio}?text=${encodeURIComponent(mensajeWA)}`;
+        }
+
+        res.json({
+            ...clienteActualizado,
+            mensajeWA,
+            waUrl
+        })
     }
     catch(error){
         res.status(500).json({error  : "Error al actualizar monto"})
@@ -172,7 +191,11 @@ export const obtenerDetalleCliente = async (req: Request, res: Response) =>{
                     id: Number(id)
                 },
                 include:{
-                    movimientos:true
+                    movimientos: {
+                        orderBy: {
+                            fecha: 'desc'
+                        }
+                    }
                 }
             });
 
@@ -181,8 +204,23 @@ export const obtenerDetalleCliente = async (req: Request, res: Response) =>{
                 res.status(404).json({error: "Cliente no encontrado"})
                 return;
             }
+
+            let saldoAcumulado = Number(cliente.saldo);
+            const movimientosConSaldo = cliente.movimientos.map((mov) => {
+                const saldoDespues = saldoAcumulado;
+                const saldoAntes = saldoAcumulado - Number(mov.monto);
+                saldoAcumulado = saldoAntes;
+                return {
+                    ...mov,
+                    saldoAntes,
+                    saldoDespues
+                };
+            });
                 
-            res.json(cliente)
+            res.json({
+                ...cliente,
+                movimientos: movimientosConSaldo
+            })
         }
         catch(error){
             res.status(500).json({error: "Error al obtener detalle"})
